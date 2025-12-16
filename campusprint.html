@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusPrint</title>
+    
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error(error);
+        };
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans">
+    
+    <div id="root" class="flex h-screen items-center justify-center text-gray-500">
+        Loading CampusPrint...
+    </div>
+
+    <script type="text/babel">
+        // ⚡️⚡️ CONFIGURATION ⚡️⚡️
+        const CLOUDINARY_CLOUD_NAME = "db6lbztrm"; 
+        const CLOUDINARY_PRESET = "campusprint_upload"; 
+        // ---------------------------------------------------
+
+        // --- ICONS ---
+        const IconFile = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>;
+        const IconUpload = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>;
+        const IconLeaf = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.77 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>;
+        const IconBriefcase = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>;
+        const IconUser = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>;
+        const IconCheck = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>;
+        const IconLink = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>;
+        const IconClock = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>;
+        const IconFire = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.1.2-2.2.5-3.3.3-1.12.8-2.2 2.5-4.2a12.5 12.5 0 0 1-2.5 7Z"></path></svg>;
+
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDfRweREGY-F7IpzGmPq0PNr7sPKO_iDDI",
+            authDomain: "campusprint-70eb3.firebaseapp.com",
+            projectId: "campusprint-70eb3",
+            storageBucket: "campusprint-70eb3.firebasestorage.app",
+            messagingSenderId: "764909713650",
+            appId: "1:764909713650:web:702ed7b3e8d0f964a4786b",
+            measurementId: "G-1436F3ZDTY"
+        };
+
+        let app, auth, db;
+        try {
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            db = firebase.firestore();
+        } catch (e) { console.error("Firebase Init Error:", e); }
+
+        const { useState, useEffect } = React;
+
+        // --- COMPONENTS ---
+
+        const Login = ({ setRole }) => {
+            const [loading, setLoading] = useState(false);
+            const [nameInput, setNameInput] = useState("");
+
+            const handleLogin = async (role) => {
+                if (role === 'student') {
+                    if (!nameInput.trim()) {
+                        alert("Please enter your name and class!");
+                        return;
+                    }
+                }
+
+                setLoading(true);
+                try { 
+                    const userCredential = await auth.signInAnonymously(); 
+                    
+                    if (role === 'student') {
+                        await userCredential.user.updateProfile({
+                            displayName: nameInput
+                        });
+                        localStorage.setItem("campus_student_name", nameInput);
+                    }
+
+                    setRole(role); 
+                } 
+                catch (e) { alert(e.message); } 
+                finally { setLoading(false); }
+            };
+
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+                    <div className="bg-white p-8 rounded-3xl shadow-xl text-center max-w-sm w-full border border-gray-100">
+                        <div className="flex justify-center mb-6 text-blue-600">
+                            <IconUpload className="w-12 h-12" />
+                        </div>
+                        <h1 className="text-2xl font-bold text-gray-800 mb-6">CampusPrint</h1>
+                        
+                        <div className="mb-4 text-left">
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Student Name & Class</label>
+                            <input 
+                                type="text" 
+                                placeholder="Enter name and class" 
+                                value={nameInput}
+                                onChange={(e) => setNameInput(e.target.value)}
+                                className="w-full bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                            />
+                        </div>
+
+                        <div className="space-y-3">
+                            <button onClick={() => handleLogin('student')} disabled={loading} className="w-full flex items-center justify-center space-x-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 px-4 rounded-xl transition duration-200 shadow-md shadow-blue-500/20 group">
+                                {loading ? 'Loading...' : <><IconUser className="w-5 h-5 opacity-80" /> <span>Login as Student</span></>}
+                            </button>
+                            
+                            <div className="relative flex py-2 items-center">
+                                <div className="flex-grow border-t border-gray-200"></div>
+                                <span className="flex-shrink-0 mx-4 text-gray-400 text-xs">OR</span>
+                                <div className="flex-grow border-t border-gray-200"></div>
+                            </div>
+
+                            <button onClick={() => handleLogin('admin')} disabled={loading} className="w-full flex items-center justify-center space-x-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold py-3.5 px-4 rounded-xl transition duration-200 group">
+                                {loading ? 'Loading...' : <><IconBriefcase className="w-5 h-5 text-gray-400 group-hover:text-gray-600" /> <span>Login as Shop Owner</span></>}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const QueueStatus = ({ count }) => {
+            let color = "bg-green-500";
+            let text = "Low Traffic";
+            let textColor = "text-green-700";
+            let bgColor = "bg-green-100";
+
+            if (count > 2) {
+                color = "bg-yellow-500";
+                text = "Medium Traffic";
+                textColor = "text-yellow-700";
+                bgColor = "bg-yellow-100";
+            }
+            if (count > 6) {
+                color = "bg-red-500";
+                text = "High Traffic";
+                textColor = "text-red-700";
+                bgColor = "bg-red-100";
+            }
+
+            return (
+                <div className={`w-full max-w-md mb-6 p-4 rounded-2xl border flex items-center justify-between shadow-sm ${bgColor} border-opacity-50`}>
+                    <div className="flex items-center space-x-3">
+                        <div className="relative">
+                            <div className={`w-3 h-3 rounded-full ${color} animate-pulse`}></div>
+                            <div className={`w-3 h-3 rounded-full ${color} absolute top-0 left-0 opacity-50 animate-ping`}></div>
+                        </div>
+                        <div>
+                            <p className={`text-xs font-bold uppercase tracking-wider ${textColor}`}>Shop Status</p>
+                            <p className="font-bold text-gray-800 text-sm">{text}</p>
+                        </div>
+                    </div>
+                    <div className="text-2xl font-bold text-gray-800 opacity-75">
+                        {count} <span className="text-xs font-medium text-gray-500">in queue</span>
+                    </div>
+                </div>
+            );
+        };
+
+        const StudentDashboard = ({ user, handleLogout }) => {
+            const [file, setFile] = useState(null);
+            const [copies, setCopies] = useState(1);
+            const [color, setColor] = useState('bw');
+            const [sides, setSides] = useState('single');
+            const [isUrgent, setIsUrgent] = useState(false);
+            const [submitting, setSubmitting] = useState(false);
+            const [progress, setProgress] = useState(0); 
+            const [status, setStatus] = useState(null);
+            const [queueCount, setQueueCount] = useState(0);
+
+            useEffect(() => {
+                const unsub = db.collection('print_jobs')
+                    .where('status', '==', 'pending')
+                    .onSnapshot(snap => setQueueCount(snap.size));
+                return () => unsub();
+            }, []);
+
+            const urgentFee = Math.max(queueCount, 1) * 2; 
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if (!file) return;
+
+                setSubmitting(true);
+                setProgress(1); 
+                
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("upload_preset", CLOUDINARY_PRESET); 
+                
+                const resourceType = file.type.includes('pdf') ? 'raw' : 'auto';
+                const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`;
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', uploadUrl);
+
+                xhr.upload.onprogress = (event) => {
+                    if (event.lengthComputable) {
+                        const percentComplete = Math.round((event.loaded / event.total) * 100);
+                        setProgress(percentComplete);
+                    }
+                };
+
+                xhr.onload = async () => {
+                    if (xhr.status === 200) {
+                        const data = JSON.parse(xhr.responseText);
+                        const fileUrl = data.secure_url;
+                        
+                        try {
+                            const displayName = localStorage.getItem("campus_student_name") || user.displayName || 'Student';
+                            let cost = (copies * (color === 'color' ? 10 : 2) * (sides === 'double' ? 1.5 : 1));
+                            
+                            if (isUrgent) {
+                                cost += urgentFee;
+                            }
+
+                            await db.collection('print_jobs').add({
+                                userId: user.uid,
+                                userName: displayName, 
+                                fileName: file.name,
+                                fileUrl: fileUrl,
+                                copies, color, sides,
+                                isUrgent: isUrgent, 
+                                urgentFee: isUrgent ? urgentFee : 0,
+                                status: 'pending', 
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                cost: cost
+                            });
+                            setStatus('success');
+                            setFile(null);
+                            setIsUrgent(false);
+                            setTimeout(() => setStatus(null), 3000);
+                        } catch (err) {
+                            console.error("Database Error:", err);
+                            alert("Database Error: " + err.message);
+                        } finally {
+                            setSubmitting(false);
+                            setProgress(0);
+                        }
+                    } else {
+                        setSubmitting(false);
+                        setProgress(0);
+                        const err = JSON.parse(xhr.responseText);
+                        alert(`Upload Failed: ${err.error.message}`);
+                    }
+                };
+
+                xhr.onerror = () => {
+                    setSubmitting(false);
+                    alert("Network Error. Check internet.");
+                };
+
+                xhr.send(formData);
+            };
+
+            return (
+                <div className="min-h-screen bg-gray-50 p-4 font-sans flex flex-col items-center">
+                    <nav className="w-full max-w-md flex justify-between items-center mb-6 pt-4">
+                        <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2"><IconUpload className="text-blue-600 w-6 h-6"/> CampusPrint</h1>
+                        <button onClick={handleLogout} className="text-sm font-medium text-gray-500 hover:text-red-500 bg-white px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm">Sign Out</button>
+                    </nav>
+
+                    <QueueStatus count={queueCount} />
+
+                    <div className="w-full max-w-md bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div className="p-6">
+                            <h2 className="text-lg font-bold text-gray-800 mb-6 flex items-center text-blue-600">
+                                <IconUpload className="w-5 h-5 mr-2" />
+                                New Print Job
+                            </h2>
+
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div className="border-2 border-dashed border-gray-200 rounded-2xl h-32 flex flex-col items-center justify-center text-center relative hover:bg-blue-50 hover:border-blue-200 transition group cursor-pointer bg-gray-50/50">
+                                    <input type="file" accept=".pdf,.doc,.docx" onChange={(e) => setFile(e.target.files[0])} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                                    <div className="bg-white p-3 rounded-full mb-2 shadow-sm group-hover:scale-110 transition">
+                                        <IconFile className={`w-6 h-6 ${file ? 'text-green-500' : 'text-gray-400'}`} />
+                                    </div>
+                                    <span className="text-xs font-semibold text-gray-500">{file ? file.name : "Click to upload PDF/Doc"}</span>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-5">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Color</label>
+                                        <div className="relative">
+                                            <select value={color} onChange={(e) => setColor(e.target.value)} className="w-full bg-white border border-gray-200 text-gray-700 text-sm rounded-xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none">
+                                                <option value="bw">Black & White (₹2)</option>
+                                                <option value="color">Color (₹10)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Copies</label>
+                                        <input type="number" min="1" max="100" value={copies} onChange={(e) => setCopies(parseInt(e.target.value))} className="w-full bg-white border border-gray-200 text-gray-700 text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Sides</label>
+                                    <div className="flex bg-gray-100 p-1 rounded-xl">
+                                        <button type="button" onClick={() => setSides('single')} className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${sides === 'single' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Single</button>
+                                        <button type="button" onClick={() => setSides('double')} className={`flex-1 py-2 text-sm font-semibold rounded-lg flex items-center justify-center transition-all duration-200 ${sides === 'double' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><IconLeaf className="w-3 h-3 mr-1.5" /> Double</button>
+                                    </div>
+                                </div>
+
+                                <div 
+                                    onClick={() => setIsUrgent(!isUrgent)}
+                                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 flex items-center justify-between group ${isUrgent ? 'border-red-500 bg-red-50' : 'border-gray-100 hover:border-red-200'}`}
+                                >
+                                    <div className="flex items-center">
+                                        <div className={`p-2 rounded-lg mr-3 ${isUrgent ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-400 group-hover:text-red-400'}`}>
+                                            <IconFire className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className={`text-sm font-bold ${isUrgent ? 'text-red-700' : 'text-gray-700'}`}>Emergency Print</h3>
+                                            <p className="text-xs text-gray-500">Prioritize this job (+₹{urgentFee})</p>
+                                        </div>
+                                    </div>
+                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isUrgent ? 'border-red-500 bg-red-500' : 'border-gray-300'}`}>
+                                        {isUrgent && <IconCheck className="w-3 h-3 text-white" />}
+                                    </div>
+                                </div>
+
+                                <div className="relative">
+                                    <button type="submit" disabled={submitting || !file} className={`w-full py-4 rounded-xl text-white font-bold text-sm shadow-lg shadow-blue-500/30 transition-all transform active:scale-[0.98] relative z-10 overflow-hidden ${submitting ? 'bg-blue-800' : 'bg-blue-600 hover:bg-blue-700 hover:shadow-blue-500/40'}`}>
+                                        <span className="relative z-20">
+                                            {submitting ? `Uploading... ${progress}%` : `Send to Printer ${isUrgent ? '(URGENT)' : ''}`}
+                                        </span>
+                                        {submitting && (
+                                            <div className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-200 ease-out z-0" style={{width: `${progress}%`}}></div>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    {status === 'success' && (
+                        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-xl flex items-center animate-bounce text-sm font-medium z-50">
+                            <IconCheck className="w-4 h-4 mr-2 text-green-400" /> Job Sent Successfully!
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const OwnerDashboard = ({ handleLogout }) => {
+            const [jobs, setJobs] = useState([]);
+            
+            useEffect(() => {
+                const unsub = db.collection('print_jobs')
+                    .where('status', '==', 'pending')
+                    .onSnapshot(snap => {
+                        const fetchedJobs = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                        fetchedJobs.sort((a, b) => {
+                            const timeA = a.createdAt?.seconds || 0;
+                            const timeB = b.createdAt?.seconds || 0;
+                            return timeA - timeB; 
+                        });
+                        setJobs(fetchedJobs);
+                    });
+                return () => unsub();
+            }, []);
+
+            const openAndClear = async (job) => {
+                let safeUrl = job.fileUrl;
+                if (safeUrl && safeUrl.startsWith('http://')) {
+                    safeUrl = safeUrl.replace('http://', 'https://');
+                }
+                window.open(safeUrl, '_blank');
+
+                try {
+                    await db.collection('print_jobs').doc(job.id).update({
+                        status: 'completed'
+                    });
+                } catch (e) {
+                    console.error("Error clearing queue:", e);
+                }
+            };
+
+            // ⚡️ CALCULATE WAIT DISCOUNTS ⚡️
+            const discounts = {}; 
+            // Loop through jobs
+            for (let i = 0; i < jobs.length; i++) {
+                if (jobs[i].isUrgent) {
+                    // Loop backwards to apply discount
+                    for (let j = i - 1; j >= 0; j--) {
+                        if (jobs[j].isUrgent) {
+                            break; // Stop at previous urgent job
+                        }
+                        // Initialize if undefined
+                        if (!discounts[jobs[j].id]) discounts[jobs[j].id] = 0;
+                        discounts[jobs[j].id] += 2; // Add 2 discount
+                    }
+                }
+            }
+
+            return (
+                <div className="min-h-screen bg-gray-100 p-6">
+                    <div className="max-w-4xl mx-auto">
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h1 className="text-2xl font-bold text-gray-800">Print Queue</h1>
+                                <p className="text-gray-500 text-sm">{jobs.length} Jobs Waiting</p>
+                            </div>
+                            <button onClick={handleLogout} className="bg-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm text-red-500 border border-red-100 hover:bg-red-50">Log Out</button>
+                        </div>
+                        
+                        <div className="grid gap-3">
+                            {jobs.length === 0 ? 
+                                <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300">
+                                    <IconCheck className="w-12 h-12 text-green-300 mx-auto mb-3" />
+                                    <p className="text-gray-400 font-medium">All caught up! No pending jobs.</p>
+                                </div> 
+                            : jobs.map((job, index) => {
+                                const discountAmount = discounts[job.id] || 0;
+                                const finalPrice = Math.max(0, job.cost - discountAmount);
+
+                                return (
+                                    <div key={job.id} className={`p-5 rounded-2xl shadow-sm border flex justify-between items-center group hover:shadow-md transition ${job.isUrgent ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200'}`}>
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-8 h-8 flex items-center justify-center font-bold rounded-full text-xs ${job.isUrgent ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
+                                                #{index + 1}
+                                            </div>
+                                            <div className={`p-3 rounded-xl ${job.isUrgent ? 'bg-red-100 text-red-600' : 'bg-yellow-50 text-yellow-600'}`}>
+                                                {job.isUrgent ? <IconFire className="w-6 h-6 animate-pulse" /> : <IconClock className="w-6 h-6" />}
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="font-bold text-gray-800 text-lg">{job.userName}</div>
+                                                    {job.isUrgent && <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-200">🔥 URGENT (+₹{job.urgentFee})</span>}
+                                                    {/* DISCOUNT BADGE */}
+                                                    {discountAmount > 0 && <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-200">🎁 WAIT BONUS (-₹{discountAmount})</span>}
+                                                </div>
+                                                <div className="text-sm text-gray-500 font-medium flex gap-2 mt-1">
+                                                    <span className="bg-white/50 px-2 py-0.5 rounded text-gray-600 truncate max-w-[150px] border border-gray-100">{job.fileName}</span>
+                                                    <span className="bg-white/50 px-2 py-0.5 rounded text-gray-600 border border-gray-100">{job.copies} Copies</span>
+                                                    {/* TOTAL PRICE DISPLAY */}
+                                                    <span className={`px-2 py-0.5 rounded border ${discountAmount > 0 ? 'bg-green-50 border-green-200 text-green-700 font-bold' : 'bg-white/50 border-gray-100 text-gray-600'}`}>
+                                                        {discountAmount > 0 ? <span><span className="line-through opacity-50 mr-1">₹{job.cost}</span>₹{finalPrice}</span> : `Total: ₹${job.cost}`}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            onClick={() => openAndClear(job)}
+                                            className="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-blue-200 hover:bg-blue-700 hover:shadow-lg transition flex items-center cursor-pointer"
+                                        >
+                                            <IconLink className="w-4 h-4 mr-2" /> Open & Print
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [user, setUser] = useState(null);
+            const [role, setRole] = useState(null);
+            const [loading, setLoading] = useState(true);
+            useEffect(() => {
+                auth.onAuthStateChanged(u => { setUser(u); setLoading(false); });
+            }, []);
+            if (loading) return <div className="flex h-screen items-center justify-center"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>;
+            if (!user) return <Login setRole={setRole} />;
+            return role === 'student' ? <StudentDashboard user={user} handleLogout={() => {auth.signOut(); setRole(null);}} /> : <OwnerDashboard handleLogout={() => {auth.signOut(); setRole(null);}} />;
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
